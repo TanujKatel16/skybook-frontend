@@ -1,7 +1,12 @@
-// src/components/auth/RegisterForm.jsx
+
 import React, { useState } from 'react';
+import authService from '../../services/auth.service';
+import { useNavigate } from "react-router-dom";
+
+
 
 const RegisterForm = () => {
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -9,7 +14,11 @@ const RegisterForm = () => {
     avatar: null,
   });
 
-  const handleChange = (e) => {
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+
+
+  const handleChange = async (e) => {
     if (e.target.name === 'avatar') {
       setFormData({ ...formData, avatar: e.target.files[0] });
     } else {
@@ -17,15 +26,40 @@ const RegisterForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const submitData = new FormData();
-    submitData.append('username', formData.username);
-    submitData.append('email', formData.email);
-    submitData.append('password', formData.password);
-    if (formData.avatar) submitData.append('avatar', formData.avatar);
+  const handleSubmit = async (e) => {
 
-    console.log('Register submitted:', formData);
+    e.preventDefault();
+    setError("");
+
+    const submitData = new FormData();
+
+    submitData.append("username", formData.username);
+    submitData.append("email", formData.email);
+    submitData.append("password", formData.password);
+
+    if (formData.avatar) {
+
+      submitData.append("avatar", formData.avatar);
+
+    }
+
+    try {
+
+      await authService.register(submitData);
+
+      navigate("/login");
+
+    }
+
+    catch (error) {
+
+      console.log(error);
+      setError(
+        error.response?.data?.message || "Something went wrong"
+      )
+
+    }
+
   };
 
   return (
@@ -86,6 +120,18 @@ const RegisterForm = () => {
           className="w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-2 file:border file:border-gray-300 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
         />
       </div>
+
+      {
+        error && (
+
+          <p className="text-red-600 text-sm">
+
+            {error}
+
+          </p>
+
+        )
+      }
 
       <button
         type="submit"

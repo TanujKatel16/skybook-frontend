@@ -4,6 +4,7 @@ import Navbar from '../components/common/Navbar';
 import CardHeader from '../components/common/CardHeader';
 import LoginForm from '../components/auth/LoginForm';
 
+
 const Login = () => {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
