@@ -1,7 +1,11 @@
-// src/components/home/FlightSearch.jsx
+
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import flightService from '../../services/flight.service';
 
 const FlightSearch = () => {
+
+  const navigate = useNavigate();
   const [search, setSearch] = useState({
     source: '',
     destination: '',
@@ -13,9 +17,28 @@ const FlightSearch = () => {
     setSearch({ ...search, [e.target.name]: e.target.value });
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
+
     e.preventDefault();
-    console.log('Searching flights:', search);
+
+    try {
+
+      const flights = await flightService.searchFlights(search);
+
+      console.log("Flights Found:", flights);
+      navigate("/flights/search", {
+        state: {
+          flights,
+          search
+        }
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
   };
 
   return (
