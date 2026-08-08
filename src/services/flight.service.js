@@ -30,11 +30,21 @@ const getFlightById = async (id) => {
     return response.data.data;
 };
 
+const getFrequentRoutes = async () => {
+
+    const response =
+        await api.get("/flights/frequent-routes");
+
+    return response.data.data;
+
+};
+
 const flightService = {
 
     searchFlights,
     getAllFlights,
-    getFlightById
+    getFlightById,
+    getFrequentRoutes
 
 };
 

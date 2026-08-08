@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import flightService from "../services/flight.service";
 import Navbar from "../components/common/Navbar";
+import { useNavigate } from "react-router-dom";
 
 const FlightDetails = () => {
 
     const { id } = useParams();
+    const navigate=useNavigate();
 
     const [flight, setFlight] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -207,7 +209,8 @@ const FlightDetails = () => {
                 <div className="bg-gray-50 border-t border-gray-300 px-5 py-4 flex justify-end">
 
                     <button
-                        className="border border-gray-400 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold px-4 py-1.5 rounded-sm transition-colors cursor-pointer active:bg-gray-300">
+                        onClick={()=> navigate (`/bookings/new/${flight._id}`)}
+                        className="border border-gray-400 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold px-4 py-1.5 rounded-sm transition-colors cursor-pointer active:bg-gray-300">    
                         Continue Booking →
                     </button>
 
