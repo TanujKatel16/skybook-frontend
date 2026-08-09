@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import flightService from "../services/flight.service";
 import Navbar from "../components/common/Navbar";
 import { useNavigate } from "react-router-dom";
+import authService from "../services/auth.service";
 
 const FlightDetails = () => {
 
@@ -11,6 +12,25 @@ const FlightDetails = () => {
 
     const [flight, setFlight] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const handleContinueBooking = async () => {
+
+        try {
+
+            const user = await authService.getCurrentUser();
+
+            console.log("CURRENT USER:", user);
+
+            navigate(`/bookings/new/${flight._id}`);
+
+        } catch (error) {
+
+
+            navigate("/login");
+
+        }
+
+    };
 
     useEffect(() => {
 
@@ -209,7 +229,7 @@ const FlightDetails = () => {
                 <div className="bg-gray-50 border-t border-gray-300 px-5 py-4 flex justify-end">
 
                     <button
-                        onClick={()=> navigate (`/bookings/new/${flight._id}`)}
+                        onClick={handleContinueBooking}
                         className="border border-gray-400 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold px-4 py-1.5 rounded-sm transition-colors cursor-pointer active:bg-gray-300">    
                         Continue Booking →
                     </button>
