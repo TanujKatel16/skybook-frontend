@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+    useNavigate,
+    useParams,
+    useLocation
+} from "react-router-dom";
 
 import flightService from "../services/flight.service";
 import bookingService from "../services/booking.service";
@@ -8,24 +12,34 @@ import Navbar from "../components/common/Navbar";
 const Booking = () => {
 
     const { flightId } = useParams();
+
     const navigate = useNavigate();
+
+    const location = useLocation();
+
+    const passengerCount =
+        Number(location.state?.passengers) || 1;
 
     const [flight, setFlight] = useState(null);
 
     const [loading, setLoading] = useState(true);
-    const [bookingLoading, setBookingLoading] = useState(false);
+
+    const [bookingLoading, setBookingLoading] =
+        useState(false);
 
     const [error, setError] = useState("");
 
-    const [passenger, setPassenger] = useState({
-
-        fullName: "",
-
-        age: "",
-
-        gender: "Male"
-
-    });
+    const [passengersData, setPassengersData] =
+        useState(
+            Array.from(
+                { length: passengerCount },
+                () => ({
+                    fullName: "",
+                    age: "",
+                    gender: "Male"
+                })
+            )
+        );
 
     useEffect(() => {
 
@@ -34,7 +48,9 @@ const Booking = () => {
             try {
 
                 const data =
-                    await flightService.getFlightById(flightId);
+                    await flightService.getFlightById(
+                        flightId
+                    );
 
                 setFlight(data);
 
@@ -44,7 +60,9 @@ const Booking = () => {
 
                 console.log(error);
 
-                setError("Unable to load flight details.");
+                setError(
+                    "Unable to load flight details."
+                );
 
             }
 
@@ -60,13 +78,20 @@ const Booking = () => {
 
     }, [flightId]);
 
-    const handleChange = (e) => {
+    const handleChange = (index, e) => {
 
-        setPassenger({
+        const { name, value } = e.target;
 
-            ...passenger,
+        setPassengersData((prev) => {
 
-            [e.target.name]: e.target.value
+            const updated = [...prev];
+
+            updated[index] = {
+                ...updated[index],
+                [name]: value
+            };
+
+            return updated;
 
         });
 
@@ -74,15 +99,46 @@ const Booking = () => {
 
     const handleBooking = async () => {
 
-        if (!passenger.fullName.trim()) {
+        setError("");
 
-            return setError("Passenger name is required.");
+        // Validate every passenger
+
+        for (let i = 0; i < passengersData.length; i++) {
+
+            if (!passengersData[i].fullName.trim()) {
+
+                setError(
+                    `Passenger ${i + 1} name is required.`
+                );
+
+                return;
+
+            }
+
+            if (!passengersData[i].age) {
+
+                setError(
+                    `Passenger ${i + 1} age is required.`
+                );
+
+                return;
+
+            }
 
         }
 
-        if (!passenger.age) {
+        // Check seat availability
 
-            return setError("Passenger age is required.");
+        if (
+            flight.availableSeats <
+            passengersData.length
+        ) {
+
+            setError(
+                `Only ${flight.availableSeats} seats are available.`
+            );
+
+            return;
 
         }
 
@@ -90,33 +146,39 @@ const Booking = () => {
 
             setBookingLoading(true);
 
-            setError("");
-
             const booking =
                 await bookingService.createBooking({
 
                     flightId: flight._id,
 
-                    passenger: {
+                    passengers: passengersData.map(
+                        (passenger) => ({
 
-                        fullName: passenger.fullName,
+                            fullName:
+                                passenger.fullName,
 
-                        age: Number(passenger.age),
+                            age:
+                                Number(passenger.age),
 
-                        gender: passenger.gender
+                            gender:
+                                passenger.gender
 
-                    }
+                        })
+                    )
 
                 });
 
-            navigate(`/bookings/${booking._id}`,{
+                console.log("CREATED BOOKING:", booking);
+                console.log("PASSENGERS:", booking.passengers);
 
-                state:{
-                    booking
+            navigate(
+                `/bookings/${booking._id}`,
+                {
+                    state: {
+                        booking
+                    }
                 }
-
-            });
-            console.log(booking);
+            );
 
         }
 
@@ -146,13 +208,19 @@ const Booking = () => {
 
         return (
 
-            <div className="max-w-4xl mx-auto mt-8 border border-gray-300 bg-white p-8">
+            <div>
 
-                <h2 className="text-lg font-bold">
+                <Navbar />
 
-                    Loading Flight...
+                <div className="max-w-4xl mx-auto mt-8 border border-gray-300 bg-white p-8">
 
-                </h2>
+                    <h2 className="text-lg font-bold">
+
+                        Loading Flight...
+
+                    </h2>
+
+                </div>
 
             </div>
 
@@ -164,13 +232,19 @@ const Booking = () => {
 
         return (
 
-            <div className="max-w-4xl mx-auto mt-8 border border-red-300 bg-white p-8">
+            <div>
 
-                <h2 className="text-lg font-bold text-red-700">
+                <Navbar />
 
-                    Flight Not Found
+                <div className="max-w-4xl mx-auto mt-8 border border-red-300 bg-white p-8">
 
-                </h2>
+                    <h2 className="text-lg font-bold text-red-700">
+
+                        Flight Not Found
+
+                    </h2>
+
+                </div>
 
             </div>
 
@@ -182,291 +256,323 @@ const Booking = () => {
 
         <div>
 
-            <Navbar/>
+            <Navbar />
 
-        <div className="max-w-5xl mx-auto mt-8 border border-gray-300 bg-white rounded-sm overflow-hidden">
+            <div className="max-w-5xl mx-auto mt-8 border border-gray-300 bg-white rounded-sm overflow-hidden">
 
-            <div className="bg-gray-100 border-b border-gray-300 px-6 py-4">
+                {/* Header */}
 
-                <h1 className="text-xl font-bold">
+                <div className="bg-gray-100 border-b border-gray-300 px-6 py-4">
 
-                    Passenger Details
+                    <h1 className="text-xl font-bold">
 
-                </h1>
+                        Passenger Details
 
-            </div>
+                    </h1>
 
-            <div className="grid md:grid-cols-2 gap-8 p-6">
+                    <p className="text-xs text-gray-500 mt-1">
 
-                {/* Passenger Form */}
-
-                <div>
-
-                    <div className="mb-5">
-
-                        <label className="block text-sm font-medium mb-2">
-
-                            Full Name
-
-                        </label>
-
-                        <input
-
-                            type="text"
-
-                            name="fullName"
-
-                            value={passenger.fullName}
-
-                            onChange={handleChange}
-
-                            className="w-full border border-gray-300 p-2 rounded-sm outline-none focus:border-blue-600"
-
-                        />
-
-                    </div>
-
-                    <div className="mb-5">
-
-                        <label className="block text-sm font-medium mb-2">
-
-                            Age
-
-                        </label>
-
-                        <input
-
-                            type="number"
-
-                            name="age"
-
-                            value={passenger.age}
-
-                            onChange={handleChange}
-
-                            className="w-full border border-gray-300 p-2 rounded-sm outline-none focus:border-blue-600"
-
-                        />
-
-                    </div>
-
-                    <div className="mb-5">
-
-                        <label className="block text-sm font-medium mb-2">
-
-                            Gender
-
-                        </label>
-
-                        <select
-
-                            name="gender"
-
-                            value={passenger.gender}
-
-                            onChange={handleChange}
-
-                            className="w-full border border-gray-300 p-2 rounded-sm"
-
-                        >
-
-                            <option value="Male">
-
-                                Male
-
-                            </option>
-
-                            <option value="Female">
-
-                                Female
-
-                            </option>
-
-                            <option value="Other">
-
-                                Other
-
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-                {/* Flight Summary */}
-
-                <div className="border border-gray-300 bg-gray-50 rounded-sm p-5">
-
-                    <h2 className="text-lg font-bold border-b pb-2 mb-4">
-
-                        Flight Summary
-
-                    </h2>
-
-                    <div className="space-y-4">
-
-                        <div>
-
-                            <p className="text-gray-500 text-sm">
-
-                                Flight Number
-
-                            </p>
-
-                            <p className="font-semibold">
-
-                                {flight.flightNumber}
-
-                            </p>
-
-                        </div>
-
-                        <div>
-
-                            <p className="text-gray-500 text-sm">
-
-                                Route
-
-                            </p>
-
-                            <p className="font-semibold">
-
-                                {flight.source} → {flight.destination}
-
-                            </p>
-
-                        </div>
-
-                        <div>
-
-                            <p className="text-gray-500 text-sm">
-
-                                Departure
-
-                            </p>
-
-                            <p className="font-semibold">
-
-                                {new Date(flight.departureTime).toLocaleString()}
-
-                            </p>
-
-                        </div>
-
-                        <div>
-
-                            <p className="text-gray-500 text-sm">
-
-                                Arrival
-
-                            </p>
-
-                            <p className="font-semibold">
-
-                                {new Date(flight.arrivalTime).toLocaleString()}
-
-                            </p>
-
-                        </div>
-
-                        <div>
-
-                            <p className="text-gray-500 text-sm">
-
-                                Status
-
-                            </p>
-
-                            <p className="font-semibold">
-
-                                {flight.status}
-
-                            </p>
-
-                        </div>
-
-                        <div>
-
-                            <p className="text-gray-500 text-sm">
-
-                                Available Seats
-
-                            </p>
-
-                            <p className="font-semibold">
-
-                                {flight.availableSeats}
-
-                            </p>
-
-                        </div>
-
-                        <hr />
-
-                        <div>
-
-                            <p className="text-gray-500 text-sm">
-
-                                Total Fare
-
-                            </p>
-
-                            <p className="text-2xl font-bold text-green-700">
-
-                                ₹ {flight.baseFare}
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div className="border-t border-gray-300 bg-gray-100 px-6 py-4">
-
-                {error && (
-
-                    <p className="text-red-600 mb-4">
-
-                        {error}
+                        {passengerCount} passenger
+                        {passengerCount > 1 ? "s" : ""}
 
                     </p>
 
-                )}
+                </div>
 
-                <div className="flex justify-end">
+                <div className="grid md:grid-cols-2 gap-8 p-6">
 
-                    <button
+                    {/* Passenger Forms */}
 
-                        onClick={handleBooking}
-
-                        disabled={bookingLoading}
-
-                        className="border border-gray-400 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold px-4 py-1.5 rounded-sm transition-colors cursor-pointer active:bg-gray-300"
-
-                    >
+                    <div>
 
                         {
 
-                            bookingLoading
+                            passengersData.map(
+                                (passenger, index) => (
 
-                                ? "Creating Booking..."
+                                    <div
+                                        key={index}
+                                        className="border border-gray-300 p-4 mb-5"
+                                    >
 
-                                : "Confirm Booking"
+                                        <h2 className="font-bold text-sm border-b border-gray-200 pb-2 mb-4">
+
+                                            Passenger {index + 1}
+
+                                        </h2>
+
+                                        {/* Name */}
+
+                                        <div className="mb-5">
+
+                                            <label className="block text-sm font-medium mb-2">
+
+                                                Full Name
+
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="fullName"
+                                                value={
+                                                    passenger.fullName
+                                                }
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        index,
+                                                        e
+                                                    )
+                                                }
+                                                className="w-full border border-gray-300 p-2 rounded-sm outline-none focus:border-blue-600"
+                                            />
+
+                                        </div>
+
+                                        {/* Age */}
+
+                                        <div className="mb-5">
+
+                                            <label className="block text-sm font-medium mb-2">
+
+                                                Age
+
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                name="age"
+                                                min="1"
+                                                value={
+                                                    passenger.age
+                                                }
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        index,
+                                                        e
+                                                    )
+                                                }
+                                                className="w-full border border-gray-300 p-2 rounded-sm outline-none focus:border-blue-600"
+                                            />
+
+                                        </div>
+
+                                        {/* Gender */}
+
+                                        <div>
+
+                                            <label className="block text-sm font-medium mb-2">
+
+                                                Gender
+
+                                            </label>
+
+                                            <select
+                                                name="gender"
+                                                value={
+                                                    passenger.gender
+                                                }
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        index,
+                                                        e
+                                                    )
+                                                }
+                                                className="w-full border border-gray-300 p-2 rounded-sm"
+                                            >
+
+                                                <option value="Male">
+                                                    Male
+                                                </option>
+
+                                                <option value="Female">
+                                                    Female
+                                                </option>
+
+                                                <option value="Other">
+                                                    Other
+                                                </option>
+
+                                            </select>
+
+                                        </div>
+
+                                    </div>
+
+                                )
+                            )
 
                         }
 
-                    </button>
+                    </div>
+
+                    {/* Flight Summary */}
+
+                    <div className="border border-gray-300 bg-gray-50 rounded-sm p-5 h-fit">
+
+                        <h2 className="text-lg font-bold border-b pb-2 mb-4">
+
+                            Flight Summary
+
+                        </h2>
+
+                        <div className="space-y-4">
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Flight Number
+                                </p>
+
+                                <p className="font-semibold">
+                                    {flight.flightNumber}
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Route
+                                </p>
+
+                                <p className="font-semibold">
+                                    {flight.source}
+                                    {" → "}
+                                    {flight.destination}
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Departure
+                                </p>
+
+                                <p className="font-semibold">
+                                    {new Date(
+                                        flight.departureTime
+                                    ).toLocaleString()}
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Arrival
+                                </p>
+
+                                <p className="font-semibold">
+                                    {new Date(
+                                        flight.arrivalTime
+                                    ).toLocaleString()}
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Passengers
+                                </p>
+
+                                <p className="font-semibold">
+                                    {passengerCount}
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Available Seats
+                                </p>
+
+                                <p className="font-semibold">
+                                    {flight.availableSeats}
+                                </p>
+
+                            </div>
+
+                            <hr />
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Fare / Passenger
+                                </p>
+
+                                <p className="font-semibold">
+                                    ₹ {flight.baseFare}
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <p className="text-gray-500 text-sm">
+                                    Total Fare
+                                </p>
+
+                                <p className="text-2xl font-bold text-green-700">
+
+                                    ₹{" "}
+                                    {
+                                        flight.baseFare *
+                                        passengerCount
+                                    }
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* Footer */}
+
+                <div className="border-t border-gray-300 bg-gray-100 px-6 py-4">
+
+                    {error && (
+
+                        <p className="text-red-600 mb-4 text-sm">
+
+                            {error}
+
+                        </p>
+
+                    )}
+
+                    <div className="flex justify-end">
+
+                        <button
+                            onClick={handleBooking}
+                            disabled={bookingLoading}
+                            className="border border-gray-400 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold px-4 py-1.5 rounded-sm transition-colors cursor-pointer active:bg-gray-300 disabled:opacity-50"
+                        >
+
+                            {
+
+                                bookingLoading
+
+                                    ? "Creating Booking..."
+
+                                    : "Confirm Booking"
+
+                            }
+
+                        </button>
+
+                    </div>
 
                 </div>
 
             </div>
 
-        </div>
         </div>
 
     );

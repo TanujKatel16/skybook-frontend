@@ -1,6 +1,15 @@
+import { useLocation } from "react-router-dom";
 import FlightCard from "./FlightCard";
 
-const FlightList = ({ flights }) => {
+const FlightList = () => {
+
+    const location = useLocation();
+
+    const flights = location.state?.flights || [];
+    const search = location.state?.search;
+
+    console.log("FlightList search:", search);
+    console.log("Passengers:", search?.passengers);
 
     return (
 
@@ -11,6 +20,7 @@ const FlightList = ({ flights }) => {
                 <FlightCard
                     key={flight._id}
                     flight={flight}
+                    passengers={Number(search?.passengers) || 1}
                 />
 
             ))}

@@ -194,53 +194,66 @@ const BookingDetails = () => {
 
                         </div>
 
-                        <div>
+                        <div className="col-span-2">
 
-                            <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 mb-3">
+                    Passengers
+                </p>
 
-                                Passenger
+                <div className="space-y-3">
 
+                    {booking.passengers?.map((passenger, index) => (
+
+                        <div
+                            key={index}
+                            className="border border-gray-300 bg-gray-50 p-4"
+                        >
+
+                            <p className="font-semibold mb-3">
+                                Passenger {index + 1}
                             </p>
 
-                            <p className="font-semibold">
+                            <div className="grid grid-cols-3 gap-6">
 
-                                {booking.passenger.fullName}
+                                <div>
+                                    <p className="text-xs text-gray-500">
+                                        Full Name
+                                    </p>
 
-                            </p>
+                                    <p className="font-semibold">
+                                        {passenger.fullName}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-gray-500">
+                                        Age
+                                    </p>
+
+                                    <p className="font-semibold">
+                                        {passenger.age}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-gray-500">
+                                        Gender
+                                    </p>
+
+                                    <p className="font-semibold">
+                                        {passenger.gender}
+                                    </p>
+                                </div>
+
+                            </div>
 
                         </div>
 
-                        <div>
+                    ))}
 
-                            <p className="text-xs text-gray-500">
+                </div>
 
-                                Age
-
-                            </p>
-
-                            <p>
-
-                                {booking.passenger.age}
-
-                            </p>
-
-                        </div>
-
-                        <div>
-
-                            <p className="text-xs text-gray-500">
-
-                                Gender
-
-                            </p>
-
-                            <p>
-
-                                {booking.passenger.gender}
-
-                            </p>
-
-                        </div>
+            </div>
 
                         <div>
 
@@ -316,7 +329,8 @@ const BookingDetails = () => {
 
                                 state: {
 
-                                    booking
+                                    booking,
+                                    passengers:booking.passengers
 
                                 }
 

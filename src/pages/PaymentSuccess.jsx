@@ -225,19 +225,38 @@ const PaymentSuccess = () => {
 
                         </div>
 
-                        <div>
+                        <div className="col-span-2">
 
-                            <p className="text-xs text-gray-500">
-
-                                Passenger
-
+                            <p className="text-xs text-gray-500 mb-3">
+                                Passengers
                             </p>
 
-                            <p>
+                            <div className="space-y-2">
 
-                                {booking.passenger.fullName}
+                                {booking.passengers?.map((passenger, index) => (
 
-                            </p>
+                                    <div
+                                        key={index}
+                                        className="border border-gray-300 bg-gray-50 p-3"
+                                    >
+
+                                        <p className="font-semibold">
+                                            Passenger {index + 1}
+                                        </p>
+
+                                        <p className="text-sm text-gray-600">
+                                            {passenger.fullName}
+                                            {" | "}
+                                            Age: {passenger.age}
+                                            {" | "}
+                                            {passenger.gender}
+                                        </p>
+
+                                    </div>
+
+                                ))}
+
+                            </div>
 
                         </div>
 
@@ -307,7 +326,7 @@ const PaymentSuccess = () => {
 
                     </button>
 
-                    <button
+                    {/* <button
 
                         onClick={() => navigate("/bookings")}
 
@@ -317,7 +336,7 @@ const PaymentSuccess = () => {
 
                         My Bookings
 
-                    </button>
+                    </button> */}
 
                 </div>
 

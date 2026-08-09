@@ -195,15 +195,32 @@ const Payment = () => {
 
                             <div className="space-y-3">
 
-                                <p>
+                                <div>
+                                    <strong>Passengers:</strong>
 
-                                    <strong>Passenger:</strong>
+                                    <div className="mt-2 space-y-2">
 
-                                    {" "}
+                                        {booking.passengers?.map((passenger, index) => (
 
-                                    {booking.passenger.fullName}
+                                            <div
+                                                key={index}
+                                                className="border border-gray-300 bg-gray-50 p-2"
+                                            >
 
-                                </p>
+                                                <p className="font-semibold">
+                                                    Passenger {index + 1}
+                                                </p>
+
+                                                <p className="text-sm text-gray-600">
+                                                    {passenger.fullName} | Age: {passenger.age} | {passenger.gender}
+                                                </p>
+
+                                            </div>
+
+                                        ))}
+
+                                    </div>
+                                </div>
 
                                 <p>
 

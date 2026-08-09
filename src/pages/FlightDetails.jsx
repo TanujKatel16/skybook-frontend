@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import flightService from "../services/flight.service";
 import Navbar from "../components/common/Navbar";
-import { useNavigate } from "react-router-dom";
 import authService from "../services/auth.service";
 
 const FlightDetails = () => {
 
     const { id } = useParams();
     const navigate=useNavigate();
+    const location=useLocation();
+    const passengers = location.state?.passengers || 1;
 
     const [flight, setFlight] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -18,14 +19,18 @@ const FlightDetails = () => {
         try {
 
             const user = await authService.getCurrentUser();
-
-            console.log("CURRENT USER:", user);
-
-            navigate(`/bookings/new/${flight._id}`);
+            console.log(user);
+            navigate(`/bookings/new/${flight._id}`,{
+                state:{
+                    passengers
+                }
+            })
 
         } catch (error) {
-
-
+            
+            console.log(error);
+            console.log("ERROR",error.message);
+            console.log("ERRORCODE",error.code);
             navigate("/login");
 
         }
